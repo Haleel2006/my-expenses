@@ -68,46 +68,70 @@ export function TransactionList() {
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((tx) => (
-            <TableRow key={tx.id}>
-              <TableCell>{format(tx.date, 'dd MMM yyyy')}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  tx.type === 'income' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                }`}>
-                  {tx.category}
-                </span>
-              </TableCell>
-              <TableCell>{tx.paymentMethod}</TableCell>
-              <TableCell className="max-w-[150px] truncate" title={tx.notes}>{tx.notes}</TableCell>
-              <TableCell className={`text-right font-medium ${
-                tx.type === 'income' ? 'text-green-600 dark:text-green-400' : ''
-              }`}>
+    <div className="w-full">
+      {/* Mobile View: Cards */}
+      <div className="md:hidden divide-y">
+        {transactions.map((tx) => (
+          <div key={tx.id} className="p-4 flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">{tx.category}</span>
+              <span className="text-xs text-muted-foreground">{format(tx.date, 'dd MMM yyyy')} • {tx.paymentMethod}</span>
+              {tx.notes && <span className="text-xs text-muted-foreground italic truncate max-w-[200px]">{tx.notes}</span>}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`font-semibold ${tx.type === 'income' ? 'text-green-600' : ''}`}>
                 {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-              </TableCell>
-              <TableCell>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(tx)}>
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                  <span className="sr-only">Delete</span>
-                </Button>
-              </TableCell>
+              </span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(tx)}>
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop View: Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Method</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {transactions.map((tx) => (
+              <TableRow key={tx.id}>
+                <TableCell>{format(tx.date, 'dd MMM yyyy')}</TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    tx.type === 'income' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                  }`}>
+                    {tx.category}
+                  </span>
+                </TableCell>
+                <TableCell>{tx.paymentMethod}</TableCell>
+                <TableCell className="max-w-[150px] truncate" title={tx.notes}>{tx.notes}</TableCell>
+                <TableCell className={`text-right font-medium ${
+                  tx.type === 'income' ? 'text-green-600 dark:text-green-400' : ''
+                }`}>
+                  {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(tx)}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

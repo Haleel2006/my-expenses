@@ -44,8 +44,8 @@ export default function DashboardPage() {
       
       <BalanceCards />
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4 rounded-xl border bg-card text-card-foreground shadow">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
+        <div className="lg:col-span-4 rounded-xl border bg-card text-card-foreground shadow">
           <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
             <h3 className="font-semibold leading-none tracking-tight">Recent Transactions</h3>
           </div>
@@ -54,12 +54,12 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="col-span-3 rounded-xl border bg-card text-card-foreground shadow">
+        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow">
           <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
             <h3 className="font-semibold leading-none tracking-tight">Analytics Preview</h3>
           </div>
           <div className="p-6 pt-0 flex items-center justify-center min-h-[200px]">
-            <p className="text-sm text-muted-foreground">Chart placeholder</p>
+            <p className="text-sm text-muted-foreground text-center">Visit the Analytics page for detailed charts.</p>
           </div>
         </div>
       </div>
