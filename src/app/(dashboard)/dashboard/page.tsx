@@ -22,23 +22,27 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <ExportButton />
-          <Button 
-            variant="outline" 
-            className="hidden sm:flex gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
-            onClick={() => openAddTransaction('income')}
-          >
-            <ArrowDownCircle className="h-4 w-4" />
-            Add Income
-          </Button>
-          <Button 
-            className="gap-2"
-            onClick={() => openAddTransaction('expense')}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add Expense
-          </Button>
+          <div className="contents sm:flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950 order-2 sm:order-none px-2 xs:px-4"
+              onClick={() => openAddTransaction('income')}
+            >
+              <ArrowDownCircle className="h-4 w-4" />
+              <span className="xs:hidden">Income</span>
+              <span className="hidden xs:inline">Add Income</span>
+            </Button>
+            <Button 
+              className="gap-2 order-1 sm:order-none px-2 xs:px-4"
+              onClick={() => openAddTransaction('expense')}
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span className="xs:hidden">Expense</span>
+              <span className="hidden xs:inline">Add Expense</span>
+            </Button>
+          </div>
         </div>
       </div>
       
