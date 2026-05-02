@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -21,8 +22,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // AuthProvider will handle redirect
+      console.log("Email login successful");
     } catch (error: any) {
+      console.error("Email login error:", error);
       toast({
         title: "Login Failed",
         description: error.message,
@@ -34,16 +36,21 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
     try {
+      console.log("Starting Google Sign-In...");
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // AuthProvider will handle redirect
+      const result = await signInWithPopup(auth, provider);
+      console.log("Google Sign-In successful:", result.user.email);
     } catch (error: any) {
+      console.error("Google Sign-In error:", error);
       toast({
         title: "Google Sign-In Failed",
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -95,8 +102,14 @@ export default function LoginPage() {
             </div>
           </div>
           
-          <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin}>
-            Google
+          <Button 
+            variant="outline" 
+            type="button" 
+            className="w-full" 
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+          >
+            {googleLoading ? "Connecting..." : "Google"}
           </Button>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
