@@ -66,13 +66,15 @@ export const deleteGoal = async (userId: string, goalId: string, savedAmount: nu
   // 1. Delete Goal
   batch.delete(doc(db, 'users', userId, 'goals', goalId));
   
-  // 2. Refund saved money to Cash (defaulting to cash for simplicity on delete, 
-  // or we could ask user where to refund, but here we just return it to balances)
+  // 2. Refund saved money to Cash (and decrement savings)
   if (savedAmount > 0) {
     const balanceRef = doc(db, 'users', userId, 'balances', 'current');
     batch.update(balanceRef, {
       cash: increment(savedAmount),
       savings: increment(-savedAmount),
+      // We don't have enough info to know if it was savingsCash or savingsGPay easily 
+      // without extra storage, so we'll just decrement savings field.
+      // Ideally we'd track this in the goal document.
       lastUpdated: Timestamp.now()
     });
   }
@@ -108,8 +110,10 @@ export const updateGoalMoney = async (
   
   if (paymentMethod === 'Cash') {
     balanceUpdate.cash = increment(balanceChange);
+    balanceUpdate.savingsCash = increment(goalChange);
   } else {
     balanceUpdate.googlePay = increment(balanceChange);
+    balanceUpdate.savingsGPay = increment(goalChange);
   }
   
   batch.update(balanceRef, balanceUpdate);

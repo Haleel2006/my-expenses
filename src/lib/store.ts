@@ -10,6 +10,8 @@ interface Balances {
   cash: number;
   googlePay: number;
   savings: number;
+  savingsCash: number;
+  savingsGPay: number;
   loansReceivable: number;
   loansPayable: number;
   totalBalance: number;
@@ -30,6 +32,8 @@ const defaultBalances: Balances = {
   cash: 0,
   googlePay: 0,
   savings: 0,
+  savingsCash: 0,
+  savingsGPay: 0,
   loansReceivable: 0,
   loansPayable: 0,
   totalBalance: 0,

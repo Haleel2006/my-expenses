@@ -17,6 +17,8 @@ export function BalanceCards() {
             cash: data.cash || 0,
             googlePay: data.googlePay || 0,
             savings: data.savings || 0,
+            savingsCash: data.savingsCash || 0,
+            savingsGPay: data.savingsGPay || 0,
             loansReceivable: data.loansReceivable || 0,
             loansPayable: data.loansPayable || 0,
           });
@@ -56,9 +58,9 @@ export function BalanceCards() {
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(balances.cash)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(balances.cash + (balances.savingsCash || 0))}</div>
           <p className="text-xs text-muted-foreground pt-1">
-            Physical currency
+            {formatCurrency(balances.cash)} available
           </p>
         </CardContent>
       </Card>
@@ -69,9 +71,9 @@ export function BalanceCards() {
           <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(balances.googlePay)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(balances.googlePay + (balances.savingsGPay || 0))}</div>
           <p className="text-xs text-muted-foreground pt-1">
-            UPI & Bank balance
+            {formatCurrency(balances.googlePay)} available
           </p>
         </CardContent>
       </Card>
