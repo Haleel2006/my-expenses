@@ -1,5 +1,19 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { 
+  collection, 
+  doc, 
+  addDoc, 
+  getDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  writeBatch, 
+  Timestamp,
+  increment
+} from 'firebase/firestore';
 
 export type LoanType = 'given' | 'taken';
 export type LoanStatus = 'pending' | 'paid';
@@ -32,17 +46,49 @@ export const fetchLoans = async (userId: string) => {
 };
 
 export const addLoan = async (userId: string, loan: Loan) => {
+  const batch = writeBatch(db);
+  
   // 1. Add Loan
-  const docRef = await addDoc(collection(db, 'users', userId, 'loans'), {
+  const newLoanRef = doc(collection(db, 'users', userId, 'loans'));
+  batch.set(newLoanRef, {
     ...loan,
     date: Timestamp.fromDate(loan.date),
     createdAt: Timestamp.now(),
   });
 
-  return docRef.id;
+  // 2. Update Balances (Only Loan Tracking, NOT Cash/GPay)
+  const balanceRef = doc(db, 'users', userId, 'balances', 'current');
+  const update: any = { lastUpdated: Timestamp.now() };
+
+  if (loan.type === 'given') {
+    update.loansReceivable = increment(loan.amount);
+  } else {
+    update.loansPayable = increment(loan.amount);
+  }
+
+  batch.update(balanceRef, update);
+  await batch.commit();
+  return newLoanRef.id;
 };
 
-export const markLoanPaid = async (userId: string, loanId: string) => {
-  const loanRef = doc(db, 'users', userId, 'loans', loanId);
-  await updateDoc(loanRef, { status: 'paid' });
+export const markLoanPaid = async (userId: string, loan: Loan) => {
+  if (!loan.id) return;
+  const batch = writeBatch(db);
+  
+  // 1. Update Loan Status
+  const loanRef = doc(db, 'users', userId, 'loans', loan.id);
+  batch.update(loanRef, { status: 'paid' });
+
+  // 2. Update Balances (Reverse Loan Tracking)
+  const balanceRef = doc(db, 'users', userId, 'balances', 'current');
+  const update: any = { lastUpdated: Timestamp.now() };
+
+  if (loan.type === 'given') {
+    update.loansReceivable = increment(-loan.amount);
+  } else {
+    update.loansPayable = increment(-loan.amount);
+  }
+
+  batch.update(balanceRef, update);
+  await batch.commit();
 };

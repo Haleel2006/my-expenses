@@ -37,7 +37,7 @@ export default function LoansPage() {
   const handleMarkPaid = async (loan: Loan) => {
     if (!user || !loan.id) return;
     try {
-      await markLoanPaid(user.uid, loan.id);
+      await markLoanPaid(user.uid, loan);
       toast({ title: "Loan marked as paid" });
       loadLoans();
     } catch (error: any) {
