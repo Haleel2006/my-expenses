@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
 
 export type TransactionType = 'income' | 'expense';
 export type PaymentMethod = 'Cash' | 'Google Pay';
@@ -43,8 +43,11 @@ export const fetchTransactions = async (userId: string, limitCount: number = 50)
 };
 
 export const addTransaction = async (userId: string, transaction: Transaction) => {
+  const batch = writeBatch(db);
+  
   // 1. Add Transaction
-  const docRef = await addDoc(collection(db, 'users', userId, 'transactions'), {
+  const newTxRef = doc(collection(db, 'users', userId, 'transactions'));
+  batch.set(newTxRef, {
     ...transaction,
     date: Timestamp.fromDate(transaction.date),
     createdAt: Timestamp.now(),
@@ -55,51 +58,60 @@ export const addTransaction = async (userId: string, transaction: Transaction) =
   const balanceSnap = await getDoc(balanceRef);
   
   if (balanceSnap.exists()) {
-    const data = balanceSnap.data();
+    const currentBalances = balanceSnap.data();
+    let { cash, googlePay } = currentBalances;
+    
     const amount = transaction.amount;
     const isExpense = transaction.type === 'expense';
-    const change = isExpense ? -amount : amount;
-    
-    const update: any = {
-      lastUpdated: Timestamp.now()
-    };
     
     if (transaction.paymentMethod === 'Cash') {
-      update.cash = (data.cash || 0) + change;
+      cash = isExpense ? cash - amount : cash + amount;
     } else {
-      update.googlePay = (data.googlePay || 0) + change;
+      googlePay = isExpense ? googlePay - amount : googlePay + amount;
     }
     
-    await updateDoc(balanceRef, update);
+    batch.update(balanceRef, {
+      cash,
+      googlePay,
+      lastUpdated: Timestamp.now()
+    });
   }
   
-  return docRef.id;
+  await batch.commit();
+  return newTxRef.id;
 };
 
 export const deleteTransaction = async (userId: string, transactionId: string, transaction: Transaction) => {
+  const batch = writeBatch(db);
+  
   // 1. Delete Transaction
-  await deleteDoc(doc(db, 'users', userId, 'transactions', transactionId));
+  const txRef = doc(db, 'users', userId, 'transactions', transactionId);
+  batch.delete(txRef);
 
   // 2. Reverse Balances
   const balanceRef = doc(db, 'users', userId, 'balances', 'current');
   const balanceSnap = await getDoc(balanceRef);
   
   if (balanceSnap.exists()) {
-    const data = balanceSnap.data();
+    const currentBalances = balanceSnap.data();
+    let { cash, googlePay } = currentBalances;
+    
     const amount = transaction.amount;
     const isExpense = transaction.type === 'expense';
-    const reverseChange = isExpense ? amount : -amount;
     
-    const update: any = {
-      lastUpdated: Timestamp.now()
-    };
-    
+    // Reverse the logic
     if (transaction.paymentMethod === 'Cash') {
-      update.cash = (data.cash || 0) + reverseChange;
+      cash = isExpense ? cash + amount : cash - amount;
     } else {
-      update.googlePay = (data.googlePay || 0) + reverseChange;
+      googlePay = isExpense ? googlePay + amount : googlePay - amount;
     }
     
-    await updateDoc(balanceRef, update);
+    batch.update(balanceRef, {
+      cash,
+      googlePay,
+      lastUpdated: Timestamp.now()
+    });
   }
+  
+  await batch.commit();
 };

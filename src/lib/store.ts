@@ -40,7 +40,7 @@ export const useStore = create<AppState>((set) => ({
   balances: defaultBalances,
   setBalances: (newBalances) => set((state) => {
     const updated = { ...state.balances, ...newBalances };
-    updated.totalBalance = (updated.cash || 0) + (updated.googlePay || 0) + (updated.loansReceivable || 0) - (updated.loansPayable || 0);
+    updated.totalBalance = updated.cash + updated.googlePay + updated.loansReceivable - updated.loansPayable;
     return { balances: updated };
   }),
   

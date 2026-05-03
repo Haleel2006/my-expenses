@@ -37,8 +37,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
     e.preventDefault();
     if (!user) return;
     
-    const numAmount = Number(amount);
-    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       toast({ title: "Invalid amount", variant: "destructive" });
       return;
     }
@@ -50,7 +49,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
     setLoading(true);
     try {
       const transaction: Transaction = {
-        amount: numAmount,
+        amount: Number(amount),
         type,
         category,
         paymentMethod,
@@ -80,12 +79,18 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const handleSmsParsed = (data: { amount: string; category: string; paymentMethod: PaymentMethod; type: TransactionType; notes: string }) => {
+    // If the parser detects an income from SMS, we might need to alert the user that this form was opened for 'expense'
+    // but we can just auto-switch it if we had a state for type. Since type is a prop, we'll just ignore the type change 
+    // or we can allow it if we lift state. For now, we'll assume it matches the dialog type or just fill the fields.
     setAmount(data.amount);
+    
+    // Check if category exists in current categories
     if (categories.includes(data.category)) {
       setCategory(data.category);
     } else {
       setCategory('Other');
     }
+    
     setPaymentMethod(data.paymentMethod);
     setNotes(data.notes);
   };
@@ -104,56 +109,55 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+               type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              step="0.01"
+            />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="paymentMethod">Source</Label>
-              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Google Pay">Google Pay</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="paymentMethod">Payment Source</Label>
+            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Google Pay">Google Pay / UPI</SelectItem>
+                <SelectItem value="Cash">Cash</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
           </div>
 
           <div className="grid gap-2">

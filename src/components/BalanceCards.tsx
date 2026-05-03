@@ -35,8 +35,8 @@ export function BalanceCards() {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-primary text-primary-foreground shadow-lg col-span-full lg:col-span-1 relative overflow-hidden">
+    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <Card className="bg-primary text-primary-foreground shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
           <IndianRupee className="h-4 w-4" />
@@ -74,7 +74,7 @@ export function BalanceCards() {
           </p>
         </CardContent>
       </Card>
-
+      
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Loans</CardTitle>

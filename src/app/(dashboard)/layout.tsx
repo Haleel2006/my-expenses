@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, Calendar, PlusCircle, CreditCard, PieChart, Lightbulb, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';

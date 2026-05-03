@@ -81,8 +81,8 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="given">Given (Receivable)</SelectItem>
-                <SelectItem value="taken">Taken (Payable)</SelectItem>
+                <SelectItem value="given">Money Given (Receivable)</SelectItem>
+                <SelectItem value="taken">Money Taken (Payable)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -108,6 +108,7 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
+              step="0.01"
             />
           </div>
 
@@ -127,7 +128,7 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Add Loan"}
+              {loading ? "Saving..." : "Save Loan"}
             </Button>
           </DialogFooter>
         </form>
