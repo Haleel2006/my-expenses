@@ -35,12 +35,11 @@ export default function LoansPage() {
   }, [user]);
 
   const handleMarkPaid = async (loan: Loan) => {
-    if (!user) return;
+    if (!user || !loan.id) return;
     try {
-      await markLoanPaid(user.uid, loan);
+      await markLoanPaid(user.uid, loan.id);
       toast({ title: "Loan marked as paid" });
       loadLoans();
-      useStore.getState().setBalances({}); // Trigger balance update
     } catch (error: any) {
       toast({ title: "Error updating loan", description: error.message, variant: "destructive" });
     }

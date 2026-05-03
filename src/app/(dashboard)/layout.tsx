@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, PlusCircle, CreditCard, PieChart, Lightbulb, LogOut, Menu, PiggyBank } from 'lucide-react';
+import { LayoutDashboard, Calendar, PlusCircle, CreditCard, PieChart, Lightbulb, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -14,7 +14,6 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Loans', href: '/loans', icon: CreditCard },
-  { name: 'Savings Goals', href: '/goals', icon: PiggyBank },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'Insights', href: '/insights', icon: Lightbulb },
 ];

@@ -1,5 +1,19 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
+import { 
+  collection, 
+  doc, 
+  addDoc, 
+  getDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  orderBy, 
+  writeBatch, 
+  Timestamp,
+  increment
+} from 'firebase/firestore';
+import { PaymentMethod } from './transactions';
 
 export type LoanType = 'given' | 'taken';
 export type LoanStatus = 'pending' | 'paid';
@@ -32,69 +46,17 @@ export const fetchLoans = async (userId: string) => {
 };
 
 export const addLoan = async (userId: string, loan: Loan) => {
-  const batch = writeBatch(db);
-  
   // 1. Add Loan
-  const newLoanRef = doc(collection(db, 'users', userId, 'loans'));
-  batch.set(newLoanRef, {
+  const docRef = await addDoc(collection(db, 'users', userId, 'loans'), {
     ...loan,
     date: Timestamp.fromDate(loan.date),
     createdAt: Timestamp.now(),
   });
 
-  // 2. Update Balances
-  const balanceRef = doc(db, 'users', userId, 'balances', 'current');
-  const balanceSnap = await getDoc(balanceRef);
-  
-  if (balanceSnap.exists()) {
-    const currentBalances = balanceSnap.data();
-    let { loansReceivable, loansPayable } = currentBalances;
-    
-    if (loan.type === 'given') {
-      loansReceivable += loan.amount;
-    } else {
-      loansPayable += loan.amount;
-    }
-    
-    batch.update(balanceRef, {
-      loansReceivable,
-      loansPayable,
-      lastUpdated: Timestamp.now()
-    });
-  }
-  
-  await batch.commit();
-  return newLoanRef.id;
+  return docRef.id;
 };
 
-export const markLoanPaid = async (userId: string, loan: Loan) => {
-  if (!loan.id) return;
-  const batch = writeBatch(db);
-  
-  // 1. Update Loan Status
-  const loanRef = doc(db, 'users', userId, 'loans', loan.id);
-  batch.update(loanRef, { status: 'paid' });
-
-  // 2. Update Balances
-  const balanceRef = doc(db, 'users', userId, 'balances', 'current');
-  const balanceSnap = await getDoc(balanceRef);
-  
-  if (balanceSnap.exists()) {
-    const currentBalances = balanceSnap.data();
-    let { loansReceivable, loansPayable } = currentBalances;
-    
-    if (loan.type === 'given') {
-      loansReceivable -= loan.amount; // Money received back
-    } else {
-      loansPayable -= loan.amount; // Money paid back
-    }
-    
-    batch.update(balanceRef, {
-      loansReceivable,
-      loansPayable,
-      lastUpdated: Timestamp.now()
-    });
-  }
-  
-  await batch.commit();
+export const markLoanPaid = async (userId: string, loanId: string) => {
+  const loanRef = doc(db, 'users', userId, 'loans', loanId);
+  await updateDoc(loanRef, { status: 'paid' });
 };

@@ -9,7 +9,6 @@ interface User {
 interface Balances {
   cash: number;
   googlePay: number;
-  savings: number;
   loansReceivable: number;
   loansPayable: number;
   totalBalance: number;
@@ -29,7 +28,6 @@ interface AppState {
 const defaultBalances: Balances = {
   cash: 0,
   googlePay: 0,
-  savings: 0,
   loansReceivable: 0,
   loansPayable: 0,
   totalBalance: 0,
@@ -42,7 +40,7 @@ export const useStore = create<AppState>((set) => ({
   balances: defaultBalances,
   setBalances: (newBalances) => set((state) => {
     const updated = { ...state.balances, ...newBalances };
-    updated.totalBalance = (updated.cash || 0) + (updated.googlePay || 0) + (updated.savings || 0) + (updated.loansReceivable || 0) - (updated.loansPayable || 0);
+    updated.totalBalance = (updated.cash || 0) + (updated.googlePay || 0) + (updated.loansReceivable || 0) - (updated.loansPayable || 0);
     return { balances: updated };
   }),
   

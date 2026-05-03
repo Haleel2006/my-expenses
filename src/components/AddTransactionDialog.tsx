@@ -7,12 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addTransaction, Transaction, TransactionType, PaymentMethod } from '@/lib/api/transactions';
-import { fetchGoals, SavingsGoal, updateGoalMoney } from '@/lib/api/goals';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { SmsParser } from './SmsParser';
-import { useEffect } from 'react';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -34,21 +32,13 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Google Pay');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState('');
-  
-  const [goals, setGoals] = useState<SavingsGoal[]>([]);
-  const [selectedGoalId, setSelectedGoalId] = useState<string>('none');
-
-  useEffect(() => {
-    if (user && open) {
-      fetchGoals(user.uid).then(setGoals);
-    }
-  }, [user, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    const numAmount = Number(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
       toast({ title: "Invalid amount", variant: "destructive" });
       return;
     }
@@ -60,7 +50,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
     setLoading(true);
     try {
       const transaction: Transaction = {
-        amount: Number(amount),
+        amount: numAmount,
         type,
         category,
         paymentMethod,
@@ -70,24 +60,12 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
 
       await addTransaction(user.uid, transaction);
       
-      // If linked to a goal, also update the goal
-      if (selectedGoalId && selectedGoalId !== 'none') {
-        const goal = goals.find(g => g.id === selectedGoalId);
-        if (goal) {
-          // If it's income, we ADD to goal. If it's expense, we usually don't "save" it, 
-          // but the requirement says "tag a transaction as Saved to Goal".
-          // We'll treat both as adding to the goal for now, as that's what "Saved to Goal" implies.
-          await updateGoalMoney(user.uid, selectedGoalId, Number(amount), paymentMethod, 'add');
-        }
-      }
-      
       toast({ title: "Transaction added successfully!" });
       
       // Reset form
       setAmount('');
       setCategory('');
       setNotes('');
-      setSelectedGoalId('none');
       setDate(format(new Date(), 'yyyy-MM-dd'));
       
       onOpenChange(false);
@@ -136,7 +114,6 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                step="0.01"
               />
             </div>
             <div className="grid gap-2">
@@ -177,22 +154,6 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
                 required
               />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="goalLink">Link to Savings Goal (Optional)</Label>
-            <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a goal" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {goals.map((g) => (
-                  <SelectItem key={g.id} value={g.id || ''}>{g.goalName} (Saved: ₹{g.savedAmount})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[10px] text-muted-foreground">This will automatically move the amount to your goal.</p>
           </div>
 
           <div className="grid gap-2">

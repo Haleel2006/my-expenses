@@ -6,9 +6,7 @@ import { PlusCircle, ArrowDownCircle } from 'lucide-react';
 import { useState } from 'react';
 import { TransactionList } from '@/components/TransactionList';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-
 import { ExportButton } from '@/components/ExportButton';
-
 export default function DashboardPage() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
