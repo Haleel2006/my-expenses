@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStore } from '@/lib/store';
-import { Wallet, IndianRupee, HandCoins, ArrowRightLeft } from 'lucide-react';
+import { Wallet, IndianRupee, HandCoins, ArrowRightLeft, PieChart } from 'lucide-react';
 import { useEffect } from 'react';
 import { fetchBalances } from '@/lib/api/transactions';
 
