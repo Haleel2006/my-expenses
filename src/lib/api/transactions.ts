@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, writeBatch, Timestamp, increment } from 'firebase/firestore';
 
 export type TransactionType = 'income' | 'expense';
 export type PaymentMethod = 'Cash' | 'Google Pay';
@@ -13,6 +13,9 @@ export interface Transaction {
   date: Date;
   notes: string;
   createdAt?: Date;
+  goalId?: string;
+  isGoalContribution?: boolean;
+  isGoalWithdrawal?: boolean;
 }
 
 export const fetchBalances = async (userId: string) => {
@@ -47,11 +50,21 @@ export const addTransaction = async (userId: string, transaction: Transaction) =
   
   // 1. Add Transaction
   const newTxRef = doc(collection(db, 'users', userId, 'transactions'));
-  batch.set(newTxRef, {
-    ...transaction,
+  const txData: any = {
+    amount: transaction.amount,
+    type: transaction.type,
+    category: transaction.category,
+    paymentMethod: transaction.paymentMethod,
     date: Timestamp.fromDate(transaction.date),
+    notes: transaction.notes || '',
     createdAt: Timestamp.now(),
-  });
+  };
+
+  if (transaction.goalId) txData.goalId = transaction.goalId;
+  if (transaction.isGoalContribution) txData.isGoalContribution = transaction.isGoalContribution;
+  if (transaction.isGoalWithdrawal) txData.isGoalWithdrawal = transaction.isGoalWithdrawal;
+
+  batch.set(newTxRef, txData);
 
   // 2. Update Balances
   const balanceRef = doc(db, 'users', userId, 'balances', 'current');
@@ -59,7 +72,7 @@ export const addTransaction = async (userId: string, transaction: Transaction) =
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { cash, googlePay } = currentBalances;
+    let { cash = 0, googlePay = 0, goalSavings = 0 } = currentBalances;
     
     const amount = transaction.amount;
     const isExpense = transaction.type === 'expense';
@@ -69,10 +82,26 @@ export const addTransaction = async (userId: string, transaction: Transaction) =
     } else {
       googlePay = isExpense ? googlePay - amount : googlePay + amount;
     }
+
+    // Handle Goal linking
+    if (transaction.goalId) {
+        if (isExpense) {
+            // Money moved from balance to goal
+            goalSavings += amount;
+            const goalRef = doc(db, 'users', userId, 'goals', transaction.goalId);
+            batch.update(goalRef, { savedAmount: increment(amount) });
+        } else {
+            // Money moved from goal to balance (withdrawal)
+            goalSavings -= amount;
+            const goalRef = doc(db, 'users', userId, 'goals', transaction.goalId);
+            batch.update(goalRef, { savedAmount: increment(-amount) });
+        }
+    }
     
     batch.update(balanceRef, {
       cash,
       googlePay,
+      goalSavings,
       lastUpdated: Timestamp.now()
     });
   }
@@ -94,7 +123,7 @@ export const deleteTransaction = async (userId: string, transactionId: string, t
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { cash, googlePay } = currentBalances;
+    let { cash = 0, googlePay = 0 } = currentBalances;
     
     const amount = transaction.amount;
     const isExpense = transaction.type === 'expense';

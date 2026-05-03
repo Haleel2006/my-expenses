@@ -37,7 +37,10 @@ export const addLoan = async (userId: string, loan: Loan) => {
   // 1. Add Loan
   const newLoanRef = doc(collection(db, 'users', userId, 'loans'));
   batch.set(newLoanRef, {
-    ...loan,
+    personName: loan.personName,
+    amount: loan.amount,
+    type: loan.type,
+    status: loan.status,
     date: Timestamp.fromDate(loan.date),
     createdAt: Timestamp.now(),
   });
@@ -48,7 +51,7 @@ export const addLoan = async (userId: string, loan: Loan) => {
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { loansReceivable, loansPayable } = currentBalances;
+    let { loansReceivable = 0, loansPayable = 0 } = currentBalances;
     
     if (loan.type === 'given') {
       loansReceivable += loan.amount;
@@ -81,7 +84,7 @@ export const markLoanPaid = async (userId: string, loan: Loan) => {
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { loansReceivable, loansPayable } = currentBalances;
+    let { loansReceivable = 0, loansPayable = 0 } = currentBalances;
     
     if (loan.type === 'given') {
       loansReceivable -= loan.amount; // Money received back

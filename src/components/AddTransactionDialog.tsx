@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addTransaction, Transaction, TransactionType, PaymentMethod } from '@/lib/api/transactions';
+import { fetchGoals, Goal } from '@/lib/api/goals';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { SmsParser } from './SmsParser';
+import { useEffect } from 'react';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -19,8 +21,8 @@ interface AddTransactionDialogProps {
   onSuccess?: () => void;
 }
 
-const EXPENSE_CATEGORIES = ['Food', 'Travel', 'Bills', 'Shopping', 'Entertainment', 'Health', 'Other'];
-const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other'];
+const EXPENSE_CATEGORIES = ['Food', 'Travel', 'Bills', 'Shopping', 'Entertainment', 'Health', 'Savings Goal', 'Other'];
+const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Goal Withdrawal', 'Other'];
 
 export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: AddTransactionDialogProps) {
   const { user } = useStore();
@@ -32,6 +34,14 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Google Pay');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState('');
+  const [goalId, setGoalId] = useState<string>('');
+  const [goals, setGoals] = useState<Goal[]>([]);
+
+  useEffect(() => {
+    if (user && open) {
+      fetchGoals(user.uid).then(setGoals);
+    }
+  }, [user, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +65,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
         paymentMethod,
         date: new Date(date),
         notes,
+        goalId: (category === 'Savings Goal' || category === 'Goal Withdrawal') ? goalId : undefined,
       };
 
       await addTransaction(user.uid, transaction);
@@ -65,6 +76,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
       setAmount('');
       setCategory('');
       setNotes('');
+      setGoalId('');
       setDate(format(new Date(), 'yyyy-MM-dd'));
       
       onOpenChange(false);
@@ -81,7 +93,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const handleSmsParsed = (data: { amount: string; category: string; paymentMethod: PaymentMethod; type: TransactionType; notes: string }) => {
     // If the parser detects an income from SMS, we might need to alert the user that this form was opened for 'expense'
     // but we can just auto-switch it if we had a state for type. Since type is a prop, we'll just ignore the type change 
-    // or we can allow it if we lift state. For now, we'll assume it matches the dialog type or just fill the fields.
+    // or we can allow it if we fill the fields.
     setAmount(data.amount);
     
     // Check if category exists in current categories
@@ -135,6 +147,25 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
               </SelectContent>
             </Select>
           </div>
+
+          {(category === 'Savings Goal' || category === 'Goal Withdrawal') && (
+            <div className="grid gap-2">
+              <Label htmlFor="goalId">Select Goal</Label>
+              <Select value={goalId} onValueChange={setGoalId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {goals.map((g) => (
+                    <SelectItem key={g.id} value={g.id!}>{g.goalName}</SelectItem>
+                  ))}
+                  {goals.length === 0 && (
+                    <SelectItem value="no-goals" disabled>No goals found</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="paymentMethod">Payment Source</Label>
