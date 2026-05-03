@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addTransaction, Transaction, TransactionType, PaymentMethod } from '@/lib/api/transactions';
+import { fetchGoals, SavingsGoal, updateGoalMoney } from '@/lib/api/goals';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { SmsParser } from './SmsParser';
+import { useEffect } from 'react';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -32,6 +34,15 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Google Pay');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState('');
+  
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  const [selectedGoalId, setSelectedGoalId] = useState<string>('none');
+
+  useEffect(() => {
+    if (user && open) {
+      fetchGoals(user.uid).then(setGoals);
+    }
+  }, [user, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,12 +70,24 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
 
       await addTransaction(user.uid, transaction);
       
+      // If linked to a goal, also update the goal
+      if (selectedGoalId && selectedGoalId !== 'none') {
+        const goal = goals.find(g => g.id === selectedGoalId);
+        if (goal) {
+          // If it's income, we ADD to goal. If it's expense, we usually don't "save" it, 
+          // but the requirement says "tag a transaction as Saved to Goal".
+          // We'll treat both as adding to the goal for now, as that's what "Saved to Goal" implies.
+          await updateGoalMoney(user.uid, selectedGoalId, Number(amount), paymentMethod, 'add');
+        }
+      }
+      
       toast({ title: "Transaction added successfully!" });
       
       // Reset form
       setAmount('');
       setCategory('');
       setNotes('');
+      setSelectedGoalId('none');
       setDate(format(new Date(), 'yyyy-MM-dd'));
       
       onOpenChange(false);
@@ -79,18 +102,12 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const handleSmsParsed = (data: { amount: string; category: string; paymentMethod: PaymentMethod; type: TransactionType; notes: string }) => {
-    // If the parser detects an income from SMS, we might need to alert the user that this form was opened for 'expense'
-    // but we can just auto-switch it if we had a state for type. Since type is a prop, we'll just ignore the type change 
-    // or we can allow it if we lift state. For now, we'll assume it matches the dialog type or just fill the fields.
     setAmount(data.amount);
-    
-    // Check if category exists in current categories
     if (categories.includes(data.category)) {
       setCategory(data.category);
     } else {
       setCategory('Other');
     }
-    
     setPaymentMethod(data.paymentMethod);
     setNotes(data.notes);
   };
@@ -109,55 +126,73 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="grid gap-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-               type="number"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              step="0.01"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                step="0.01"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={setCategory} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="paymentMethod">Source</Label>
+              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Google Pay">Google Pay</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
           <div className="grid gap-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Label htmlFor="goalLink">Link to Savings Goal (Optional)</Label>
+            <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder="Select a goal" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+                {goals.map((g) => (
+                  <SelectItem key={g.id} value={g.id || ''}>{g.goalName} (Saved: ₹{g.savedAmount})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="paymentMethod">Payment Source</Label>
-            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Google Pay">Google Pay / UPI</SelectItem>
-                <SelectItem value="Cash">Cash</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <p className="text-[10px] text-muted-foreground">This will automatically move the amount to your goal.</p>
           </div>
 
           <div className="grid gap-2">

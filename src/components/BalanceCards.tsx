@@ -16,6 +16,7 @@ export function BalanceCards() {
           setBalances({
             cash: data.cash || 0,
             googlePay: data.googlePay || 0,
+            savings: data.savings || 0,
             loansReceivable: data.loansReceivable || 0,
             loansPayable: data.loansPayable || 0,
           });
@@ -24,7 +25,7 @@ export function BalanceCards() {
     }
   }, [user, setBalances]);
 
-  const totalBalance = balances.cash + balances.googlePay + balances.loansReceivable - balances.loansPayable;
+  const totalBalance = balances.cash + balances.googlePay + balances.savings + balances.loansReceivable - balances.loansPayable;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -35,8 +36,8 @@ export function BalanceCards() {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-      <Card className="bg-primary text-primary-foreground shadow-lg">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <Card className="bg-primary text-primary-foreground shadow-lg col-span-full lg:col-span-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
           <IndianRupee className="h-4 w-4" />
@@ -71,6 +72,19 @@ export function BalanceCards() {
           <div className="text-2xl font-bold">{formatCurrency(balances.googlePay)}</div>
           <p className="text-xs text-muted-foreground pt-1">
             UPI & Bank balance
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Savings</CardTitle>
+          <PieChart className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatCurrency(balances.savings)}</div>
+          <p className="text-xs text-muted-foreground pt-1">
+            Locked in goals
           </p>
         </CardContent>
       </Card>
