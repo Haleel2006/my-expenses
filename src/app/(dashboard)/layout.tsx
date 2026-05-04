@@ -1,24 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { clearAllUserData } from '@/lib/api/goals';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
 import { fetchBalances } from '@/lib/api/transactions';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Loans', href: '/loans', icon: CreditCard },
-  { name: 'Savings Goals', href: '/goals', icon: Target },
+  { name: 'Goals', href: '/goals', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'Insights', href: '/insights', icon: Lightbulb },
 ];
@@ -67,90 +67,149 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen premium-bg">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
   }
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <PieChart className="h-6 w-6 text-primary" />
-          <span className="">Expenso</span>
-        </Link>
+    <div className="flex h-full flex-col p-4">
+      <div className="flex items-center gap-3 px-2 mb-8">
+        <div className="w-10 h-10 rounded-xl fintech-gradient flex items-center justify-center shadow-lg glow-primary">
+          <PieChart className="h-6 w-6 text-white" />
+        </div>
+        <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">Expenso</span>
       </div>
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                  isActive 
-                    ? "bg-muted text-primary" 
-                    : "text-muted-foreground hover:bg-muted hover:text-primary"
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
+      
+      <nav className="flex-1 space-y-2">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="relative group flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300"
+            >
+              {isActive && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute inset-0 bg-primary/20 rounded-xl border border-primary/30 glow-primary"
+                />
+              )}
+              <item.icon className={`h-5 w-5 transition-colors ${isActive ? "text-primary" : "text-white/60 group-hover:text-white"}`} />
+              <span className={`font-medium transition-colors ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`}>
                 {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-      <div className="mt-auto p-4 border-t space-y-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-auto pt-4 border-t border-white/10 space-y-4">
+        <button 
           onClick={handleClearData}
+          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-400 hover:text-rose-300 transition-colors"
         >
           <Trash2 className="h-4 w-4" />
-          Clear All History
-        </Button>
-        <div className="flex items-center gap-3 px-2 py-2">
+          Clear History
+        </button>
+        
+        <div className="flex items-center gap-3 px-2">
           <div className="flex-1 truncate">
-            <p className="text-sm font-medium">{user?.name || 'User'}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-sm font-semibold text-white">{user?.name || 'User'}</p>
+            <p className="text-xs text-white/40 truncate">{user?.email}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Log out">
+          <button 
+            onClick={handleLogout}
+            className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all"
+          >
             <LogOut className="h-4 w-4" />
-            <span className="sr-only">Log out</span>
-          </Button>
+          </button>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <SidebarContent />
+    <div className="min-h-screen w-full relative">
+      <div className="premium-bg" />
+      <div className="blob blob-1" />
+      <div className="blob blob-2" />
+      <div className="blob blob-3" />
+
+      <div className="grid md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr] h-screen overflow-hidden">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:block m-4 mr-0 glass-card">
+          <SidebarContent />
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="flex flex-col h-screen overflow-hidden">
+          <header className="md:hidden flex h-16 items-center justify-between px-6 bg-transparent">
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg fintech-gradient flex items-center justify-center shadow-lg">
+                  <PieChart className="h-5 w-5 text-white" />
+                </div>
+                <span className="font-bold text-lg">Expenso</span>
+             </div>
+             <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-72 glass-card border-none">
+                  <SidebarContent />
+                </SheetContent>
+             </Sheet>
+          </header>
+
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 lg:p-10 custom-scrollbar">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="max-w-7xl mx-auto w-full pb-20 md:pb-0"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
       </div>
-      <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0 w-72">
-              <SidebarContent />
-            </SheetContent>
-          </Sheet>
-          <div className="w-full flex-1">
-            {/* Header Title or Global Search could go here */}
-            <h1 className="font-semibold text-lg sm:hidden">Expenso</h1>
-          </div>
-        </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
-          {children}
-        </main>
-      </div>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-6 left-6 right-6 h-16 glass-card flex items-center justify-around px-4 z-50">
+        {navItems.slice(0, 4).map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link key={item.name} href={item.href} className="relative p-2">
+              <item.icon className={`h-6 w-6 transition-colors ${isActive ? "text-primary" : "text-white/40"}`} />
+              {isActive && (
+                <motion.div 
+                  layoutId="bottomNav"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary glow-primary"
+                />
+              )}
+            </Link>
+          );
+        })}
+        <button onClick={handleLogout} className="p-2 text-white/40">
+          <LogOut className="h-6 w-6" />
+        </button>
+      </nav>
     </div>
   );
 }

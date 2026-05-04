@@ -2,10 +2,13 @@
 
 import { BalanceCards } from '@/components/BalanceCards';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ArrowDownCircle } from 'lucide-react';
+import { PlusCircle, ArrowDownCircle, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { TransactionList } from '@/components/TransactionList';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
+import { AnalyticsPreview } from '@/components/AnalyticsPreview';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 import { ExportButton } from '@/components/ExportButton';
 
@@ -19,53 +22,75 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className="grid grid-cols-2 sm:flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <ExportButton />
-          <div className="contents sm:flex gap-2">
-            <Button 
-              variant="outline" 
-              className="flex gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950 order-2 sm:order-none px-2 xs:px-4"
-              onClick={() => openAddTransaction('income')}
-            >
-              <ArrowDownCircle className="h-4 w-4" />
-              <span className="xs:hidden">Income</span>
-              <span className="hidden xs:inline">Add Income</span>
-            </Button>
-            <Button 
-              className="gap-2 order-1 sm:order-none px-2 xs:px-4"
-              onClick={() => openAddTransaction('expense')}
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span className="xs:hidden">Expense</span>
-              <span className="hidden xs:inline">Add Expense</span>
-            </Button>
-          </div>
+    <div className="flex flex-col gap-8 pb-10">
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+      >
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+            Overview
+          </h1>
+          <p className="text-white/40 mt-1">Monitor your finances with precision.</p>
         </div>
-      </div>
+        
+        <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
+          <ExportButton />
+          <Button 
+            variant="outline" 
+            className="rounded-xl border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 gap-2 h-11"
+            onClick={() => openAddTransaction('income')}
+          >
+            <ArrowDownCircle className="h-4 w-4" />
+            <span>Add Income</span>
+          </Button>
+          <Button 
+            className="btn-premium h-11"
+            onClick={() => openAddTransaction('expense')}
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Expense</span>
+          </Button>
+        </div>
+      </motion.div>
       
       <BalanceCards />
       
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
-        <div className="lg:col-span-4 rounded-xl border bg-card text-card-foreground shadow">
-          <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="font-semibold leading-none tracking-tight">Recent Transactions</h3>
+      <div className="grid gap-8 grid-cols-1 lg:grid-cols-7">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-4 glass-card overflow-hidden"
+        >
+          <div className="p-6 flex flex-row items-center justify-between border-b border-white/5">
+            <h3 className="font-bold text-lg tracking-tight">Recent Transactions</h3>
+            <Link href="/calendar" className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+               View Calendar <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
-          <div className="p-0 pt-0">
+          <div className="p-0">
             <TransactionList />
           </div>
-        </div>
+        </motion.div>
         
-        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow">
-          <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="font-semibold leading-none tracking-tight">Analytics Preview</h3>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:col-span-3 glass-card overflow-hidden"
+        >
+          <div className="p-6 flex flex-row items-center justify-between border-b border-white/5">
+            <h3 className="font-bold text-lg tracking-tight">Analytics Preview</h3>
+            <Link href="/analytics" className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+               Details <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
-          <div className="p-6 pt-0 flex items-center justify-center min-h-[200px]">
-            <p className="text-sm text-muted-foreground text-center">Visit the Analytics page for detailed charts.</p>
+          <div className="p-0">
+            <AnalyticsPreview />
           </div>
-        </div>
+        </motion.div>
       </div>
       
       <AddTransactionDialog 
@@ -73,7 +98,6 @@ export default function DashboardPage() {
         onOpenChange={setIsAddTransactionOpen} 
         type={transactionType}
         onSuccess={() => {
-          // A real app would use a global state or SWR to refetch, here we trigger a full reload or let the components handle it.
           window.location.reload(); 
         }}
       />

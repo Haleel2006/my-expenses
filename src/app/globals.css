@@ -4,38 +4,6 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -45,8 +13,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -62,7 +30,19 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 263.4 70% 50.4%;
+
+    --radius: 1rem;
+    
+    --income: 142.1 70.6% 45.3%;
+    --expense: 0 84.2% 60.2%;
+    --warning: 38 92% 50%;
+    --cyan: 188 100% 50%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
   }
 }
 
@@ -71,6 +51,90 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-primary/30;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #6366F1, #A855F7);
+    border-radius: 10px;
+  }
+}
+
+@layer components {
+  .premium-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 50%, #0F172A 0%, #020617 100%);
+    overflow: hidden;
+  }
+
+  .blob {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+    filter: blur(100px);
+    border-radius: 50%;
+    opacity: 0.15;
+    animation: blob-float 20s infinite alternate;
+  }
+
+  .blob-1 { top: -10%; left: -10%; }
+  .blob-2 { bottom: -10%; right: -10%; animation-delay: -5s; }
+  .blob-3 { top: 40%; right: 20%; animation-delay: -10s; opacity: 0.1; }
+
+  @keyframes blob-float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(100px, 50px) scale(1.2); }
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300;
+    border-radius: 1.5rem;
+  }
+
+  .glass-card:hover {
+    @apply bg-white/10 border-white/20 shadow-[0_8px_32px_0_rgba(99,102,241,0.2)];
+    transform: translateY(-5px);
+  }
+
+  .fintech-gradient {
+    background: linear-gradient(135deg, #0F172A 0%, #6366F1 50%, #A855F7 100%);
+  }
+
+  .glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+  .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+  .glow-primary { box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .btn-premium {
+    @apply fintech-gradient rounded-full px-6 py-2 font-semibold text-white shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 hover:glow-primary;
+  }
+
+  .input-premium {
+    @apply bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300;
   }
 }
