@@ -10,6 +10,11 @@ import { addMoneyToGoal, withdrawFromGoal } from '@/lib/api/goals';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentMethod } from '@/lib/api/transactions';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface GoalActionDialogProps {
   open: boolean;
@@ -26,6 +31,7 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
+  const [date, setDate] = useState<Date>(new Date());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +54,7 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
     setLoading(true);
     try {
       if (type === 'add') {
-        await addMoneyToGoal(user.uid, goalId, numAmount, paymentMethod);
+        await addMoneyToGoal(user.uid, goalId, numAmount, paymentMethod, date);
         toast({ title: "Added to goal!", description: `₹${numAmount} moved to ${goalName}` });
         
         // Update local store balance to reflect changes immediately
@@ -58,7 +64,7 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
             setBalances({ googlePay: balances.googlePay - numAmount, goalSavings: balances.goalSavings + numAmount });
         }
       } else {
-        await withdrawFromGoal(user.uid, goalId, numAmount, paymentMethod);
+        await withdrawFromGoal(user.uid, goalId, numAmount, paymentMethod, date);
         toast({ title: "Withdrawn from goal!", description: `₹${numAmount} moved back to ${paymentMethod}` });
 
         if (paymentMethod === 'Cash') {
@@ -69,10 +75,12 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
       }
       
       setAmount('');
+      setDate(new Date());
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -100,6 +108,32 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
               step="0.01"
               autoFocus
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Transaction Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="grid gap-2">

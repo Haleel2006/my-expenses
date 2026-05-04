@@ -9,7 +9,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setIsLoading } = useStore();
+  const { setUser, setIsLoading, resetStore } = useStore();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               googlePay: 0,
               loansReceivable: 0,
               loansPayable: 0,
+              goalSavings: 0,
               lastUpdated: new Date()
             });
             console.log("Profile and balances initialized.");
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.push('/dashboard');
         }
       } else {
-        setUser(null);
+        resetStore();
         if (pathname !== '/login' && pathname !== '/signup') {
           router.push('/login');
         }
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [setUser, setIsLoading, router, pathname]);
+  }, [setUser, setIsLoading, resetStore, router, pathname, toast]);
 
   return <>{children}</>;
 }

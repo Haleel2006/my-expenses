@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 import { fetchGoals, Goal } from '@/lib/api/goals';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,10 @@ import { Plus, Target, PieChart as PieChartIcon, TrendingUp } from 'lucide-react
 import { AddGoalDialog } from '@/components/AddGoalDialog';
 import { GoalCard } from '@/components/GoalCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
+const COLORS = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#60a5fa', '#93c5fd']; // Blue variations
+const RED_COLOR = '#ef4444'; // Red for pending/target
 
 export default function GoalsPage() {
   const { user } = useStore();
@@ -18,7 +19,7 @@ export default function GoalsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const loadGoals = async () => {
+  const loadGoals = useCallback(async () => {
     if (!user) return;
     try {
       const data = await fetchGoals(user.uid);
@@ -28,11 +29,11 @@ export default function GoalsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadGoals();
-  }, [user]);
+  }, [loadGoals]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-[400px]">Loading goals...</div>;
@@ -51,7 +52,7 @@ export default function GoalsPage() {
   })).filter(d => d.value > 0);
   
   if (totalRemaining > 0) {
-    distributionData.push({ name: 'Pending Target', value: totalRemaining, color: '#94a3b8' });
+    distributionData.push({ name: 'Pending Target', value: totalRemaining, color: RED_COLOR });
   }
 
   const goalBreakdownData = goals.map((g, index) => ({
@@ -63,13 +64,13 @@ export default function GoalsPage() {
 
   const formatCurrency = (value: number) => `₹${value.toLocaleString()}`;
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 backdrop-blur-md border border-border p-3 rounded-xl shadow-2xl ring-1 ring-black/5">
           <p className="font-bold text-sm mb-2">{label || payload[0].name}</p>
           <div className="space-y-1">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry, index) => (
               <div key={index} className="flex items-center justify-between gap-4 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.payload.color || entry.fill || entry.color }} />
@@ -152,7 +153,7 @@ export default function GoalsPage() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
-                  <Bar dataKey="target" name="Target" fill="#94a3b8" opacity={0.15} radius={[6, 6, 0, 0]} barSize={24} />
+                  <Bar dataKey="target" name="Target" fill={RED_COLOR} opacity={0.1} radius={[6, 6, 0, 0]} barSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

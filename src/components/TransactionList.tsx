@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 import { fetchTransactions, deleteTransaction, Transaction } from '@/lib/api/transactions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,7 +15,7 @@ export function TransactionList() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -26,11 +26,11 @@ export function TransactionList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadTransactions();
-  }, [user]);
+  }, [loadTransactions]);
 
   // Expose reload function to parent or listen to store changes
   // For simplicity, we'll just poll or rely on parent triggering reload.
@@ -46,8 +46,9 @@ export function TransactionList() {
         loadTransactions();
         // Trigger balance reload
         useStore.getState().setBalances({}); // This is a hack to trigger useEffect in BalanceCards. In a real app, use SWR/React Query or Firestore real-time snapshot.
-      } catch (error: any) {
-        toast({ title: "Error deleting", description: error.message, variant: "destructive" });
+      } catch (error: unknown) {
+        const err = error as Error;
+        toast({ title: "Error deleting", description: err.message, variant: "destructive" });
       }
     }
   };

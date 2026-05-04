@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, PlusCircle, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -60,8 +60,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setBalances({ cash: 0, googlePay: 0, goalSavings: 0, loansReceivable: 0, loansPayable: 0 });
       toast({ title: "History cleared successfully" });
       router.refresh();
-    } catch (error: any) {
-      toast({ title: "Error clearing data", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error clearing data", description: err.message, variant: "destructive" });
     }
   };
 
@@ -74,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <PieChart className="h-6 w-6 text-primary" />
-          <span className="">Expense Tracker</span>
+          <span className="">Expenso</span>
         </Link>
       </div>
       <div className="flex-1 overflow-auto py-2">
@@ -143,7 +144,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Sheet>
           <div className="w-full flex-1">
             {/* Header Title or Global Search could go here */}
-            <h1 className="font-semibold text-lg sm:hidden">Expense Tracker</h1>
+            <h1 className="font-semibold text-lg sm:hidden">Expenso</h1>
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">

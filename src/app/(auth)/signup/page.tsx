@@ -44,10 +44,11 @@ export default function SignupPage() {
       });
 
       // AuthProvider will handle redirect
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       toast({
         title: "Signup Failed",
-        description: error.message,
+        description: err.message,
         variant: "destructive"
       });
     } finally {
@@ -60,10 +61,11 @@ export default function SignupPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       // AuthProvider and Firestore initialization is handled in AuthProvider for Google sign-in
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       toast({
         title: "Google Sign-Up Failed",
-        description: error.message,
+        description: err.message,
         variant: "destructive"
       });
     }

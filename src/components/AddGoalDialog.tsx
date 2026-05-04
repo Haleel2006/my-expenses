@@ -61,8 +61,9 @@ export function AddGoalDialog({ open, onOpenChange, onSuccess }: AddGoalDialogPr
       
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
-      toast({ title: "Error creating goal", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error creating goal", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

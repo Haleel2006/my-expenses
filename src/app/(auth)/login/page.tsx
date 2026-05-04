@@ -23,11 +23,12 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log("Email login successful");
-    } catch (error: any) {
-      console.error("Email login error:", error);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("Email login error:", err);
       toast({
         title: "Login Failed",
-        description: error.message,
+        description: err.message,
         variant: "destructive"
       });
     } finally {
@@ -42,11 +43,12 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       console.log("Google Sign-In successful:", result.user.email);
-    } catch (error: any) {
-      console.error("Google Sign-In error:", error);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("Google Sign-In error:", err);
       toast({
         title: "Google Sign-In Failed",
-        description: error.message,
+        description: err.message,
         variant: "destructive"
       });
     } finally {
@@ -114,7 +116,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center text-muted-foreground">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="underline hover:text-primary">
               Sign up
             </Link>

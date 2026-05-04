@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: "Personal Expense Tracker",
+  title: "Expenso",
   description: "Track your expenses, manage loans, and stay on budget.",
 };
 

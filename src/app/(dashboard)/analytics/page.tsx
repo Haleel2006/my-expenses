@@ -32,8 +32,8 @@ export default function AnalyticsPage() {
   const now = new Date();
   const currentMonthStart = startOfMonth(now);
   const currentMonthEnd = endOfMonth(now);
-  
-  const currentMonthTxs = transactions.filter(tx => 
+
+  const currentMonthTxs = transactions.filter(tx =>
     isWithinInterval(tx.date, { start: currentMonthStart, end: currentMonthEnd })
   );
 
@@ -63,12 +63,12 @@ export default function AnalyticsPage() {
     const monthDate = subMonths(now, i);
     const mStart = startOfMonth(monthDate);
     const mEnd = endOfMonth(monthDate);
-    
+
     const mTxs = transactions.filter(tx => isWithinInterval(tx.date, { start: mStart, end: mEnd }));
-    
+
     const mSpent = mTxs.filter(tx => tx.type === 'expense').reduce((acc, tx) => acc + tx.amount, 0);
     const mIncome = mTxs.filter(tx => tx.type === 'income').reduce((acc, tx) => acc + tx.amount, 0);
-    
+
     trendData.push({
       name: format(monthDate, 'MMM'),
       expense: mSpent,
@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-      
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Tooltip formatter={(value: number | string) => formatCurrency(Number(value))} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -158,7 +158,7 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis tickFormatter={(value) => `₹${value}`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value: number | string) => formatCurrency(Number(value))} />
                 <Legend />
                 <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />

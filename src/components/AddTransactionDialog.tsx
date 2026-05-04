@@ -13,6 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { SmsParser } from './SmsParser';
 import { useEffect } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -32,7 +36,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Google Pay');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [date, setDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState('');
   const [goalId, setGoalId] = useState<string>('');
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -63,7 +67,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
         type,
         category,
         paymentMethod,
-        date: new Date(date),
+        date: date,
         notes,
         goalId: (category === 'Savings Goal' || category === 'Goal Withdrawal') ? goalId : undefined,
       };
@@ -77,12 +81,13 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
       setCategory('');
       setNotes('');
       setGoalId('');
-      setDate(format(new Date(), 'yyyy-MM-dd'));
+      setDate(new Date());
       
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
-      toast({ title: "Error adding transaction", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error adding transaction", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -91,12 +96,8 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const handleSmsParsed = (data: { amount: string; category: string; paymentMethod: PaymentMethod; type: TransactionType; notes: string }) => {
-    // If the parser detects an income from SMS, we might need to alert the user that this form was opened for 'expense'
-    // but we can just auto-switch it if we had a state for type. Since type is a prop, we'll just ignore the type change 
-    // or we can allow it if we fill the fields.
     setAmount(data.amount);
     
-    // Check if category exists in current categories
     if (categories.includes(data.category)) {
       setCategory(data.category);
     } else {
@@ -181,14 +182,29 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <Label>Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="grid gap-2">

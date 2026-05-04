@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 import { fetchLoans, markLoanPaid, Loan } from '@/lib/api/loans';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ export default function LoansPage() {
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const loadLoans = async () => {
+  const loadLoans = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -28,11 +28,11 @@ export default function LoansPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadLoans();
-  }, [user]);
+  }, [loadLoans]);
 
   const handleMarkPaid = async (loan: Loan) => {
     if (!user) return;
@@ -41,8 +41,9 @@ export default function LoansPage() {
       toast({ title: "Loan marked as paid" });
       loadLoans();
       useStore.getState().setBalances({}); // Trigger balance update
-    } catch (error: any) {
-      toast({ title: "Error updating loan", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error updating loan", description: err.message, variant: "destructive" });
     }
   };
 

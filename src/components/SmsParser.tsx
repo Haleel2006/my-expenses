@@ -74,7 +74,7 @@ export function SmsParser({ onParsed }: SmsParserProps) {
       onParsed({ amount, category, paymentMethod, type, notes });
       setSmsText('');
       
-    } catch (error) {
+    } catch {
       toast({ title: "Parsing failed", description: "Could not understand the SMS format.", variant: "destructive" });
     }
   };

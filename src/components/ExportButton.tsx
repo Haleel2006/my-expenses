@@ -42,7 +42,7 @@ export function ExportButton() {
       document.body.removeChild(link);
 
       toast({ title: "Export successful" });
-    } catch (error) {
+    } catch {
       toast({ title: "Export failed", variant: "destructive" });
     } finally {
       setLoading(false);

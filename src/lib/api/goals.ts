@@ -43,7 +43,7 @@ export const addGoal = async (userId: string, goal: Omit<Goal, 'id'>) => {
 
 export const updateGoal = async (userId: string, goalId: string, data: Partial<Goal>) => {
   const goalRef = doc(db, 'users', userId, 'goals', goalId);
-  const updateData: any = { ...data };
+  const updateData: Record<string, any> = { ...data };
   if (data.startDate) updateData.startDate = Timestamp.fromDate(data.startDate);
   if (data.targetDate) updateData.targetDate = Timestamp.fromDate(data.targetDate);
   
@@ -51,10 +51,34 @@ export const updateGoal = async (userId: string, goalId: string, data: Partial<G
 };
 
 export const deleteGoal = async (userId: string, goalId: string) => {
-  await deleteDoc(doc(db, 'users', userId, 'goals', goalId));
+  const batch = writeBatch(db);
+  const goalRef = doc(db, 'users', userId, 'goals', goalId);
+  const goalSnap = await getDoc(goalRef);
+  
+  if (!goalSnap.exists()) return;
+  const savedAmount = goalSnap.data().savedAmount || 0;
+
+  // 1. Delete the goal document
+  batch.delete(goalRef);
+
+  // 2. Update the total goal savings balance if there was any money in it
+  if (savedAmount > 0) {
+    const balanceRef = doc(db, 'users', userId, 'balances', 'current');
+    const balanceSnap = await getDoc(balanceRef);
+    if (balanceSnap.exists()) {
+      const currentBalances = balanceSnap.data();
+      const { goalSavings = 0 } = currentBalances;
+      batch.update(balanceRef, {
+        goalSavings: Math.max(0, goalSavings - savedAmount),
+        lastUpdated: Timestamp.now()
+      });
+    }
+  }
+
+  await batch.commit();
 };
 
-export const addMoneyToGoal = async (userId: string, goalId: string, amount: number, paymentMethod: PaymentMethod) => {
+export const addMoneyToGoal = async (userId: string, goalId: string, amount: number, paymentMethod: PaymentMethod, date: Date = new Date()) => {
   const batch = writeBatch(db);
   
   // 1. Update Goal
@@ -71,7 +95,8 @@ export const addMoneyToGoal = async (userId: string, goalId: string, amount: num
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { cash = 0, googlePay = 0, goalSavings = 0 } = currentBalances;
+    const { goalSavings = 0 } = currentBalances;
+    let { cash = 0, googlePay = 0 } = currentBalances;
     
     if (paymentMethod === 'Cash') {
       cash -= amount;
@@ -94,7 +119,7 @@ export const addMoneyToGoal = async (userId: string, goalId: string, amount: num
     type: 'expense',
     category: 'Savings Goal',
     paymentMethod,
-    date: Timestamp.now(),
+    date: Timestamp.fromDate(date),
     notes: `Added to goal: ${goalSnap.data().goalName}`,
     createdAt: Timestamp.now(),
     isGoalContribution: true,
@@ -104,7 +129,7 @@ export const addMoneyToGoal = async (userId: string, goalId: string, amount: num
   await batch.commit();
 };
 
-export const withdrawFromGoal = async (userId: string, goalId: string, amount: number, paymentMethod: PaymentMethod) => {
+export const withdrawFromGoal = async (userId: string, goalId: string, amount: number, paymentMethod: PaymentMethod, date: Date = new Date()) => {
   const batch = writeBatch(db);
   
   // 1. Update Goal
@@ -123,7 +148,8 @@ export const withdrawFromGoal = async (userId: string, goalId: string, amount: n
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
-    let { cash = 0, googlePay = 0, goalSavings = 0 } = currentBalances;
+    const { goalSavings = 0 } = currentBalances;
+    let { cash = 0, googlePay = 0 } = currentBalances;
     
     if (paymentMethod === 'Cash') {
       cash += amount;
@@ -146,7 +172,7 @@ export const withdrawFromGoal = async (userId: string, goalId: string, amount: n
     type: 'income',
     category: 'Goal Withdrawal',
     paymentMethod,
-    date: Timestamp.now(),
+    date: Timestamp.fromDate(date),
     notes: `Withdrawn from goal: ${goalSnap.data().goalName}`,
     createdAt: Timestamp.now(),
     isGoalWithdrawal: true,

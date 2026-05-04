@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
 
 export type LoanType = 'given' | 'taken';
 export type LoanStatus = 'pending' | 'paid';

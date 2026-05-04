@@ -11,6 +11,7 @@ interface Balances {
   googlePay: number;
   loansReceivable: number;
   loansPayable: number;
+  goalSavings: number;
   totalBalance: number;
 }
 
@@ -23,6 +24,7 @@ interface AppState {
   
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
+  resetStore: () => void;
 }
 
 const defaultBalances: Balances = {
@@ -41,10 +43,16 @@ export const useStore = create<AppState>((set) => ({
   balances: defaultBalances,
   setBalances: (newBalances) => set((state) => {
     const updated = { ...state.balances, ...newBalances };
-    updated.totalBalance = updated.cash + updated.googlePay + updated.loansReceivable - updated.loansPayable + updated.goalSavings;
+    updated.totalBalance = (updated.cash || 0) + (updated.googlePay || 0) + (updated.loansReceivable || 0) - (updated.loansPayable || 0) + (updated.goalSavings || 0);
     return { balances: updated };
   }),
   
   isLoading: true,
   setIsLoading: (isLoading) => set({ isLoading }),
+  
+  resetStore: () => set({ 
+    user: null, 
+    balances: defaultBalances,
+    isLoading: false 
+  }),
 }));

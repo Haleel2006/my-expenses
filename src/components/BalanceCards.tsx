@@ -3,8 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStore } from '@/lib/store';
 import { Wallet, IndianRupee, HandCoins, ArrowRightLeft, Target } from 'lucide-react';
-import { useEffect } from 'react';
-import { fetchBalances } from '@/lib/api/transactions';
+
 
 export function BalanceCards() {
   const { balances } = useStore();

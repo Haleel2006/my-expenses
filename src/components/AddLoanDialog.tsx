@@ -60,8 +60,9 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
       
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
-      toast({ title: "Error adding loan", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({ title: "Error adding loan", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
