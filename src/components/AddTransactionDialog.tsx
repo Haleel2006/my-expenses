@@ -110,132 +110,123 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] w-full p-0 sm:p-6 overflow-hidden sm:rounded-3xl border-none sm:border bg-background sm:bg-background/80 sm:backdrop-blur-xl bottom-0 sm:bottom-auto fixed sm:relative translate-y-0 sm:-translate-y-1/2 rounded-t-[2.5rem] rounded-b-none sm:rounded-b-3xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div className="sm:hidden w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-4 mb-2" />
-        <div className="p-6 pt-2 sm:p-0">
-          <DialogHeader className="mb-4">
-            <DialogTitle className="text-2xl font-bold">Add {type === 'expense' ? 'Expense' : 'Income'}</DialogTitle>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add {type === 'expense' ? 'Expense' : 'Income'}</DialogTitle>
+        </DialogHeader>
+        
+        {type === 'expense' && (
+          <div className="pt-2">
+            <SmsParser onParsed={handleSmsParsed} />
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="grid gap-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+               type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              step="0.01"
+            />
+          </div>
           
-          {type === 'expense' && (
-            <div className="mb-6">
-              <SmsParser onParsed={handleSmsParsed} />
+          <div className="grid gap-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(category === 'Savings Goal' || category === 'Goal Withdrawal') && (
+            <div className="grid gap-2">
+              <Label htmlFor="goalId">Select Goal</Label>
+              <Select value={goalId} onValueChange={setGoalId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {goals.map((g) => (
+                    <SelectItem key={g.id} value={g.id!}>{g.goalName}</SelectItem>
+                  ))}
+                  {goals.length === 0 && (
+                    <SelectItem value="no-goals" disabled>No goals found</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-2">
-              <Label htmlFor="amount" className="text-sm font-medium text-white/60 ml-1">Amount (₹)</Label>
-              <Input
-                id="amount"
-                type="number"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                step="0.01"
-                autoFocus
-                className="input-premium text-3xl h-16 font-bold"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="category" className="text-sm font-medium text-white/60 ml-1">Category</Label>
-                <Select value={category} onValueChange={setCategory} required>
-                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card no-hover">
-                    {categories.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid gap-2">
+            <Label htmlFor="paymentMethod">Payment Source</Label>
+            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Bank account">Bank account / UPI</SelectItem>
+                <SelectItem value="Wallet">Wallet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="paymentMethod" className="text-sm font-medium text-white/60 ml-1">Source</Label>
-                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} required>
-                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10">
-                    <SelectValue placeholder="Select source" />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card no-hover">
-                    <SelectItem value="Bank account">Bank account / UPI</SelectItem>
-                    <SelectItem value="Wallet">Wallet</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="grid gap-2">
+            <Label>Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-            {(category === 'Savings Goal' || category === 'Goal Withdrawal') && (
-              <div className="grid gap-2">
-                <Label htmlFor="goalId" className="text-sm font-medium text-white/60 ml-1">Select Goal</Label>
-                <Select value={goalId} onValueChange={setGoalId} required>
-                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10">
-                    <SelectValue placeholder="Select a goal" />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card no-hover">
-                    {goals.map((g) => (
-                      <SelectItem key={g.id} value={g.id!}>{g.goalName}</SelectItem>
-                    ))}
-                    {goals.length === 0 && (
-                      <SelectItem value="no-goals" disabled>No goals found</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+          <div className="grid gap-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Input
+              id="notes"
+              type="text"
+              placeholder="What was this for?"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
 
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-white/60 ml-1">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full h-14 rounded-2xl justify-start text-left font-normal bg-white/5 border-white/10",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 glass-card no-hover" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => d && setDate(d)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="notes" className="text-sm font-medium text-white/60 ml-1">Notes (Optional)</Label>
-              <Input
-                id="notes"
-                type="text"
-                placeholder="What was this for?"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="h-14 rounded-2xl bg-white/5 border-white/10"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="ghost" className="flex-1 h-14 rounded-2xl text-white/60" onClick={() => onOpenChange(false)} disabled={loading}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading} className="btn-premium flex-[2] h-14 text-lg">
-                {loading ? "Saving..." : "Save Transaction"}
-              </Button>
-            </div>
-          </form>
-        </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save Transaction"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

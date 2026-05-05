@@ -7,14 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: "Expenso",
-  description: "Track your finances with precision. Premium Fintech UI.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover",
-  themeColor: "#0F172A",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Expenso",
-  },
+  description: "Track your expenses, manage loans, and stay on budget.",
 };
 
 import { AuthProvider } from "@/components/AuthProvider";

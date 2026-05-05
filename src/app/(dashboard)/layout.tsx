@@ -5,18 +5,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2, X, Settings, Plus, List } from 'lucide-react';
+import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { fetchBalances } from '@/lib/api/transactions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Transactions', href: '/calendar', icon: List },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Loans', href: '/loans', icon: CreditCard },
   { name: 'Goals', href: '/goals', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
@@ -30,7 +29,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, isLoading, setBalances } = useStore();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -119,7 +117,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen w-full relative safe-area-inset">
+    <div className="min-h-screen w-full relative">
       <div className="premium-bg" />
       <div className="blob blob-1" />
       <div className="blob blob-2" />
@@ -152,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
              </Sheet>
           </header>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 md:p-8 lg:p-10 custom-scrollbar">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 lg:p-10 custom-scrollbar">
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={pathname}
@@ -160,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="max-w-7xl mx-auto w-full pb-24 md:pb-0"
+                className="max-w-7xl mx-auto w-full pb-20 md:pb-0"
               >
                 {children}
               </motion.div>
@@ -169,47 +167,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </div>
 
-      {/* Mobile Bottom Nav - Native App Style */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-[#0F172A]/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-2 z-50 pb-safe">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 flex-1">
-          <LayoutDashboard className={`h-6 w-6 transition-colors ${pathname === '/dashboard' ? "text-primary" : "text-white/40"}`} />
-          <span className={`text-[10px] font-medium ${pathname === '/dashboard' ? "text-white" : "text-white/40"}`}>Dashboard</span>
-        </Link>
-        
-        <Link href="/calendar" className="flex flex-col items-center gap-1 flex-1">
-          <List className={`h-6 w-6 transition-colors ${pathname === '/calendar' ? "text-primary" : "text-white/40"}`} />
-          <span className={`text-[10px] font-medium ${pathname === '/calendar' ? "text-white" : "text-white/40"}`}>History</span>
-        </Link>
-
-        <div className="flex-1 flex justify-center -translate-y-4">
-          <button 
-            onClick={() => setIsAddOpen(true)}
-            className="w-14 h-14 rounded-full fintech-gradient flex items-center justify-center shadow-2xl shadow-primary/40 border-4 border-[#0F172A] active:scale-90 transition-transform"
-          >
-            <Plus className="h-8 w-8 text-white" />
-          </button>
-        </div>
-
-        <Link href="/goals" className="flex flex-col items-center gap-1 flex-1">
-          <Target className={`h-6 w-6 transition-colors ${pathname === '/goals' ? "text-primary" : "text-white/40"}`} />
-          <span className={`text-[10px] font-medium ${pathname === '/goals' ? "text-white" : "text-white/40"}`}>Goals</span>
-        </Link>
-
-        <Link href="/settings" className="flex flex-col items-center gap-1 flex-1">
-          <Settings className={`h-6 w-6 transition-colors ${pathname === '/settings' ? "text-primary" : "text-white/40"}`} />
-          <span className={`text-[10px] font-medium ${pathname === '/settings' ? "text-white" : "text-white/40"}`}>Settings</span>
-        </Link>
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-6 left-6 right-6 h-16 glass-card flex items-center justify-around px-4 z-50">
+        {navItems.slice(0, 4).map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link key={item.name} href={item.href} className="relative p-2">
+              <item.icon className={`h-6 w-6 transition-colors ${isActive ? "text-primary" : "text-white/40"}`} />
+              {isActive && (
+                <motion.div 
+                  layoutId="bottomNav"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary glow-primary"
+                />
+              )}
+            </Link>
+          );
+        })}
+        <button onClick={handleLogout} className="p-2 text-white/40">
+          <LogOut className="h-6 w-6" />
+        </button>
       </nav>
-
-      <AddTransactionDialog 
-        open={isAddOpen} 
-        onOpenChange={setIsAddOpen} 
-        type="expense"
-        onSuccess={() => {
-          setIsAddOpen(false);
-          router.refresh();
-        }}
-      />
     </div>
   );
 }

@@ -29,7 +29,7 @@ export function BalanceCards() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
     >
       <motion.div variants={item}>
         <Card className="fintech-gradient text-white border-none shadow-2xl glow-primary relative overflow-hidden group">
