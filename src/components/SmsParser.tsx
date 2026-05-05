@@ -26,7 +26,7 @@ export function SmsParser({ onParsed }: SmsParserProps) {
       let amount = '';
       let type: TransactionType = 'expense';
       let category = 'Other';
-      const paymentMethod: PaymentMethod = 'Google Pay';
+      const paymentMethod: PaymentMethod = 'Bank account';
       let notes = '';
 
       // Extract amount

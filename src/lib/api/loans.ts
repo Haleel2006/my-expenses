@@ -101,3 +101,19 @@ export const markLoanPaid = async (userId: string, loan: Loan) => {
   
   await batch.commit();
 };
+
+export const deleteAllLoans = async (userId: string) => {
+  const batch = writeBatch(db);
+  const q = collection(db, 'users', userId, 'loans');
+  const snapshot = await getDocs(q);
+  snapshot.forEach(doc => batch.delete(doc.ref));
+
+  const balanceRef = doc(db, 'users', userId, 'balances', 'current');
+  batch.update(balanceRef, {
+    loansReceivable: 0,
+    loansPayable: 0,
+    lastUpdated: Timestamp.now()
+  });
+
+  await batch.commit();
+};

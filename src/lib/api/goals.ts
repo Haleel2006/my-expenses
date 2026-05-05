@@ -95,20 +95,23 @@ export const addMoneyToGoal = async (userId: string, goalId: string, amount: num
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
+    let wallet = currentBalances.wallet !== undefined ? currentBalances.wallet : (currentBalances.cash || 0);
+    let bankAccount = currentBalances.bankAccount !== undefined ? currentBalances.bankAccount : (currentBalances.googlePay || 0);
     const { goalSavings = 0 } = currentBalances;
-    let { cash = 0, googlePay = 0 } = currentBalances;
     
-    if (paymentMethod === 'Cash') {
-      cash -= amount;
+    if (paymentMethod === 'Wallet') {
+      wallet -= amount;
     } else {
-      googlePay -= amount;
+      bankAccount -= amount;
     }
     
     batch.update(balanceRef, {
-      cash,
-      googlePay,
+      wallet,
+      bankAccount,
       goalSavings: goalSavings + amount,
-      lastUpdated: Timestamp.now()
+      lastUpdated: Timestamp.now(),
+      cash: null,
+      googlePay: null
     });
   }
 
@@ -148,20 +151,23 @@ export const withdrawFromGoal = async (userId: string, goalId: string, amount: n
   
   if (balanceSnap.exists()) {
     const currentBalances = balanceSnap.data();
+    let wallet = currentBalances.wallet !== undefined ? currentBalances.wallet : (currentBalances.cash || 0);
+    let bankAccount = currentBalances.bankAccount !== undefined ? currentBalances.bankAccount : (currentBalances.googlePay || 0);
     const { goalSavings = 0 } = currentBalances;
-    let { cash = 0, googlePay = 0 } = currentBalances;
     
-    if (paymentMethod === 'Cash') {
-      cash += amount;
+    if (paymentMethod === 'Wallet') {
+      wallet += amount;
     } else {
-      googlePay += amount;
+      bankAccount += amount;
     }
     
     batch.update(balanceRef, {
-      cash,
-      googlePay,
+      wallet,
+      bankAccount,
       goalSavings: goalSavings - amount,
-      lastUpdated: Timestamp.now()
+      lastUpdated: Timestamp.now(),
+      cash: null,
+      googlePay: null
     });
   }
 
@@ -200,10 +206,12 @@ export const clearAllUserData = async (userId: string) => {
   // Reset balances
   const balanceRef = doc(db, 'users', userId, 'balances', 'current');
   batch.set(balanceRef, {
-    cash: 0,
-    googlePay: 0,
+    wallet: 0,
+    bankAccount: 0,
     goalSavings: 0,
-    lastUpdated: Timestamp.now()
+    lastUpdated: Timestamp.now(),
+    cash: null,
+    googlePay: null
   });
   
   await batch.commit();

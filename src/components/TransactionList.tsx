@@ -84,7 +84,7 @@ export function TransactionList() {
   return (
     <div className="w-full overflow-hidden">
       {/* Mobile View: Cards */}
-      <div className="md:hidden space-y-3 p-4">
+      <div className="md:hidden space-y-4 p-4">
         <AnimatePresence>
           {displayedTransactions.map((tx, idx) => (
             <motion.div 
@@ -92,26 +92,28 @@ export function TransactionList() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="glass-card p-4 flex items-center justify-between group"
+              className="glass-card p-5 flex items-center justify-between group active:scale-[0.98] transition-transform"
             >
               <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${tx.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                  {tx.type === 'income' ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
+                <div className={`p-4 rounded-2xl ${tx.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                  {tx.type === 'income' ? <ArrowDownLeft className="h-6 w-6" /> : <ArrowUpRight className="h-6 w-6" />}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-white">{tx.category}</span>
-                  <span className="text-[10px] text-white/40 uppercase tracking-wider">{format(tx.date, 'dd MMM yyyy')} • {tx.paymentMethod}</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-base font-bold text-white">{tx.category}</span>
+                  <span className="text-[11px] text-white/40 uppercase tracking-wider font-medium">
+                    {format(tx.date, 'dd MMM')} • {tx.paymentMethod}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-white'}`}>
+              <div className="flex items-center gap-4">
+                <span className={`text-base font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-white'}`}>
                   {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                 </span>
                 <button 
                   onClick={() => handleDelete(tx)}
-                  className="p-2 text-white/20 hover:text-rose-500 transition-colors"
+                  className="p-3 -mr-2 text-white/20 hover:text-rose-500 active:text-rose-500 transition-colors"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-5 w-5" />
                 </button>
               </div>
             </motion.div>
@@ -167,17 +169,17 @@ export function TransactionList() {
       </div>
 
       {transactions.length > 5 && (
-        <div className="p-6 flex justify-center border-t border-white/5">
+        <div className="p-4 sm:p-6 flex justify-center border-t border-white/5">
           <Button 
             variant="ghost" 
-            size="sm" 
-            className="text-white/40 hover:text-white gap-2 rounded-full px-6 hover:bg-white/5"
+            size="lg" 
+            className="w-full sm:w-auto text-white/40 hover:text-white gap-2 rounded-2xl sm:rounded-full px-6 hover:bg-white/5 h-14 sm:h-10"
             onClick={() => setShowAll(!showAll)}
           >
             {showAll ? (
-              <><ChevronUp className="h-4 w-4" /> Show less</>
+              <><ChevronUp className="h-5 w-5" /> Show less</>
             ) : (
-              <><ChevronDown className="h-4 w-4" /> Read more ({transactions.length - 5} more)</>
+              <><ChevronDown className="h-5 w-5" /> Read more ({transactions.length - 5} more)</>
             )}
           </Button>
         </div>

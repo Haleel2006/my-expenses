@@ -5,22 +5,23 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, CreditCard, PieChart, Lightbulb, LogOut, Menu, Target, Trash2, X, Settings, Plus, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { clearAllUserData } from '@/lib/api/goals';
 import { useToast } from '@/hooks/use-toast';
 import { fetchBalances } from '@/lib/api/transactions';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Transactions', href: '/calendar', icon: List },
   { name: 'Loans', href: '/loans', icon: CreditCard },
   { name: 'Goals', href: '/goals', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'Insights', href: '/insights', icon: Lightbulb },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -29,14 +30,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, isLoading, setBalances } = useStore();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchBalances(user.uid).then((data) => {
         if (data) {
           setBalances({
-            cash: data.cash || 0,
-            googlePay: data.googlePay || 0,
+            wallet: data.wallet || 0,
+            bankAccount: data.bankAccount || 0,
             loansReceivable: data.loansReceivable || 0,
             loansPayable: data.loansPayable || 0,
             goalSavings: data.goalSavings || 0,
@@ -49,21 +51,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
-  };
-
-  const handleClearData = async () => {
-    if (!user) return;
-    if (!confirm("Are you sure you want to clear all history? This cannot be undone.")) return;
-    
-    try {
-      await clearAllUserData(user.uid);
-      setBalances({ cash: 0, googlePay: 0, goalSavings: 0, loansReceivable: 0, loansPayable: 0 });
-      toast({ title: "History cleared successfully" });
-      router.refresh();
-    } catch (error: unknown) {
-      const err = error as Error;
-      toast({ title: "Error clearing data", description: err.message, variant: "destructive" });
-    }
   };
 
   if (isLoading) {
@@ -115,14 +102,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       <div className="mt-auto pt-4 border-t border-white/10 space-y-4">
-        <button 
-          onClick={handleClearData}
-          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-400 hover:text-rose-300 transition-colors"
-        >
-          <Trash2 className="h-4 w-4" />
-          Clear History
-        </button>
-        
         <div className="flex items-center gap-3 px-2">
           <div className="flex-1 truncate">
             <p className="text-sm font-semibold text-white">{user?.name || 'User'}</p>
@@ -140,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen w-full relative safe-area-inset">
       <div className="premium-bg" />
       <div className="blob blob-1" />
       <div className="blob blob-2" />
@@ -173,15 +152,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
              </Sheet>
           </header>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 lg:p-10 custom-scrollbar">
-            <AnimatePresence mode="wait">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 md:p-8 lg:p-10 custom-scrollbar">
+            <AnimatePresence mode="popLayout">
               <motion.div
                 key={pathname}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="max-w-7xl mx-auto w-full pb-20 md:pb-0"
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="max-w-7xl mx-auto w-full pb-24 md:pb-0"
               >
                 {children}
               </motion.div>
@@ -190,26 +169,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </div>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-6 left-6 right-6 h-16 glass-card flex items-center justify-around px-4 z-50">
-        {navItems.slice(0, 4).map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.name} href={item.href} className="relative p-2">
-              <item.icon className={`h-6 w-6 transition-colors ${isActive ? "text-primary" : "text-white/40"}`} />
-              {isActive && (
-                <motion.div 
-                  layoutId="bottomNav"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary glow-primary"
-                />
-              )}
-            </Link>
-          );
-        })}
-        <button onClick={handleLogout} className="p-2 text-white/40">
-          <LogOut className="h-6 w-6" />
-        </button>
+      {/* Mobile Bottom Nav - Native App Style */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-[#0F172A]/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-2 z-50 pb-safe">
+        <Link href="/dashboard" className="flex flex-col items-center gap-1 flex-1">
+          <LayoutDashboard className={`h-6 w-6 transition-colors ${pathname === '/dashboard' ? "text-primary" : "text-white/40"}`} />
+          <span className={`text-[10px] font-medium ${pathname === '/dashboard' ? "text-white" : "text-white/40"}`}>Dashboard</span>
+        </Link>
+        
+        <Link href="/calendar" className="flex flex-col items-center gap-1 flex-1">
+          <List className={`h-6 w-6 transition-colors ${pathname === '/calendar' ? "text-primary" : "text-white/40"}`} />
+          <span className={`text-[10px] font-medium ${pathname === '/calendar' ? "text-white" : "text-white/40"}`}>History</span>
+        </Link>
+
+        <div className="flex-1 flex justify-center -translate-y-4">
+          <button 
+            onClick={() => setIsAddOpen(true)}
+            className="w-14 h-14 rounded-full fintech-gradient flex items-center justify-center shadow-2xl shadow-primary/40 border-4 border-[#0F172A] active:scale-90 transition-transform"
+          >
+            <Plus className="h-8 w-8 text-white" />
+          </button>
+        </div>
+
+        <Link href="/goals" className="flex flex-col items-center gap-1 flex-1">
+          <Target className={`h-6 w-6 transition-colors ${pathname === '/goals' ? "text-primary" : "text-white/40"}`} />
+          <span className={`text-[10px] font-medium ${pathname === '/goals' ? "text-white" : "text-white/40"}`}>Goals</span>
+        </Link>
+
+        <Link href="/settings" className="flex flex-col items-center gap-1 flex-1">
+          <Settings className={`h-6 w-6 transition-colors ${pathname === '/settings' ? "text-primary" : "text-white/40"}`} />
+          <span className={`text-[10px] font-medium ${pathname === '/settings' ? "text-white" : "text-white/40"}`}>Settings</span>
+        </Link>
       </nav>
+
+      <AddTransactionDialog 
+        open={isAddOpen} 
+        onOpenChange={setIsAddOpen} 
+        type="expense"
+        onSuccess={() => {
+          setIsAddOpen(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

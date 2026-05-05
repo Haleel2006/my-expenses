@@ -29,7 +29,7 @@ export function BalanceCards() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+      className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
     >
       <motion.div variants={item}>
         <Card className="fintech-gradient text-white border-none shadow-2xl glow-primary relative overflow-hidden group">
@@ -54,14 +54,14 @@ export function BalanceCards() {
       <motion.div variants={item}>
         <Card className="glass-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-white/60 uppercase tracking-wider">Cash</CardTitle>
+            <CardTitle className="text-sm font-semibold text-white/60 uppercase tracking-wider">Wallet</CardTitle>
             <div className="p-2 bg-orange-500/10 rounded-lg text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300">
               <Wallet className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              ₹<CountUp end={balances.cash} duration={1.5} separator="," />
+              ₹<CountUp end={balances.wallet} duration={1.5} separator="," />
             </div>
             <p className="text-xs text-white/40 pt-2">Physical Currency</p>
           </CardContent>
@@ -71,14 +71,14 @@ export function BalanceCards() {
       <motion.div variants={item}>
         <Card className="glass-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-white/60 uppercase tracking-wider">Google Pay</CardTitle>
+            <CardTitle className="text-sm font-semibold text-white/60 uppercase tracking-wider">Bank account</CardTitle>
             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
               <ArrowRightLeft className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              ₹<CountUp end={balances.googlePay} duration={1.5} separator="," />
+              ₹<CountUp end={balances.bankAccount} duration={1.5} separator="," />
             </div>
             <p className="text-xs text-white/40 pt-2">UPI & Digital Balance</p>
           </CardContent>

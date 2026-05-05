@@ -35,7 +35,7 @@ export default function DashboardPage() {
           <p className="text-white/40 mt-1">Monitor your finances with precision.</p>
         </div>
         
-        <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
+        <div className="hidden sm:flex items-center gap-3 w-full sm:w-auto">
           <ExportButton />
           <Button 
             variant="outline" 

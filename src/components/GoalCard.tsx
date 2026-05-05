@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PinVerificationDialog } from './PinVerificationDialog';
 
 interface GoalCardProps {
   goal: Goal;
@@ -25,10 +26,11 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onUpdate }: GoalCardProps) {
-  const { user } = useStore();
+  const { user, securitySettings } = useStore();
   const { toast } = useToast();
   const [actionType, setActionType] = useState<'add' | 'withdraw' | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const percentage = Math.min(100, (goal.savedAmount / goal.targetAmount) * 100);
@@ -105,7 +107,13 @@ export function GoalCard({ goal, onUpdate }: GoalCardProps) {
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                onClick={() => setIsDeleteDialogOpen(true)}
+                onClick={() => {
+                  if (securitySettings.pinEnabled) {
+                    setIsPinDialogOpen(true);
+                  } else {
+                    setIsDeleteDialogOpen(true);
+                  }
+                }}
                 title="Delete Goal"
               >
                 <Trash2 className="h-4 w-4" />
@@ -204,6 +212,13 @@ export function GoalCard({ goal, onUpdate }: GoalCardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <PinVerificationDialog 
+        open={isPinDialogOpen}
+        onOpenChange={setIsPinDialogOpen}
+        onSuccess={() => setIsDeleteDialogOpen(true)}
+        title="Verify PIN to Delete"
+        description={`Enter PIN to confirm deletion of "${goal.goalName}"`}
+      />
     </>
   );
 }

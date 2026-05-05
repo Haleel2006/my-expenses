@@ -2,20 +2,32 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
-import { fetchLoans, markLoanPaid, Loan } from '@/lib/api/loans';
+import { fetchLoans, markLoanPaid, Loan, deleteAllLoans } from '@/lib/api/loans';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { AddLoanDialog } from '@/components/AddLoanDialog';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { PinVerificationDialog } from '@/components/PinVerificationDialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from '@/components/ui/dialog';
 
 export default function LoansPage() {
-  const { user } = useStore();
+  const { user, securitySettings } = useStore();
   const { toast } = useToast();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isPinOpen, setIsPinOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadLoans = useCallback(async () => {
     if (!user) return;
@@ -47,6 +59,22 @@ export default function LoansPage() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      await deleteAllLoans(user.uid);
+      toast({ title: "All loans cleared successfully" });
+      loadLoans();
+      useStore.getState().setBalances({ loansReceivable: 0, loansPayable: 0 });
+      setIsConfirmOpen(false);
+    } catch (error: any) {
+      toast({ title: "Error clearing loans", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   };
@@ -55,10 +83,28 @@ export default function LoansPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Loans</h1>
-        <Button onClick={() => setIsAddOpen(true)} className="gap-2">
-          <PlusCircle className="h-4 w-4" />
-          Add Loan
-        </Button>
+        <div className="flex gap-2">
+          {loans.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 gap-2"
+              onClick={() => {
+                if (securitySettings.pinEnabled) {
+                  setIsPinOpen(true);
+                } else {
+                  setIsConfirmOpen(true);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear All
+            </Button>
+          )}
+          <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+            <PlusCircle className="h-4 w-4" />
+            Add Loan
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card text-card-foreground shadow">
@@ -166,6 +212,36 @@ export default function LoansPage() {
       </div>
 
       <AddLoanDialog open={isAddOpen} onOpenChange={setIsAddOpen} onSuccess={loadLoans} />
+      
+      <PinVerificationDialog 
+        open={isPinOpen}
+        onOpenChange={setIsPinOpen}
+        onSuccess={() => setIsConfirmOpen(true)}
+        title="Verify PIN to Clear Loans"
+        description="Enter your security PIN to clear all loan history."
+      />
+
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" /> Clear All Loans
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete ALL loan records? This action will also reset your loans receivable and payable balances.
+              <p className="mt-2 font-semibold text-destructive">This cannot be undone.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsConfirmOpen(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleClearAll} disabled={isDeleting}>
+              {isDeleting ? "Clearing..." : "Yes, Clear All Loans"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

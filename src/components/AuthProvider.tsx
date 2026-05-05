@@ -42,8 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Also initialize balances document
             const balanceRef = doc(db, 'users', firebaseUser.uid, 'balances', 'current');
             await setDoc(balanceRef, {
-              cash: 0,
-              googlePay: 0,
+              wallet: 0,
+              bankAccount: 0,
               loansReceivable: 0,
               loansPayable: 0,
               goalSavings: 0,

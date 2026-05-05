@@ -36,8 +36,8 @@ export default function SignupPage() {
       
       const balanceRef = doc(db, 'users', userCredential.user.uid, 'balances', 'current');
       await setDoc(balanceRef, {
-        cash: 0,
-        googlePay: 0,
+        wallet: 0,
+        bankAccount: 0,
         loansReceivable: 0,
         loansPayable: 0,
         lastUpdated: new Date()

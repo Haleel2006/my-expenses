@@ -30,7 +30,7 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank account');
   const [date, setDate] = useState<Date>(new Date());
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +44,7 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
     }
 
     if (type === 'add') {
-        const available = paymentMethod === 'Cash' ? balances.cash : balances.googlePay;
+        const available = paymentMethod === 'Wallet' ? balances.wallet : balances.bankAccount;
         if (numAmount > available) {
             toast({ title: "Insufficient balance", description: `You only have ₹${available} in ${paymentMethod}`, variant: "destructive" });
             return;
@@ -58,19 +58,19 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
         toast({ title: "Added to goal!", description: `₹${numAmount} moved to ${goalName}` });
         
         // Update local store balance to reflect changes immediately
-        if (paymentMethod === 'Cash') {
-            setBalances({ cash: balances.cash - numAmount, goalSavings: balances.goalSavings + numAmount });
+        if (paymentMethod === 'Wallet') {
+            setBalances({ wallet: balances.wallet - numAmount, goalSavings: balances.goalSavings + numAmount });
         } else {
-            setBalances({ googlePay: balances.googlePay - numAmount, goalSavings: balances.goalSavings + numAmount });
+            setBalances({ bankAccount: balances.bankAccount - numAmount, goalSavings: balances.goalSavings + numAmount });
         }
       } else {
         await withdrawFromGoal(user.uid, goalId, numAmount, paymentMethod, date);
         toast({ title: "Withdrawn from goal!", description: `₹${numAmount} moved back to ${paymentMethod}` });
 
-        if (paymentMethod === 'Cash') {
-            setBalances({ cash: balances.cash + numAmount, goalSavings: balances.goalSavings - numAmount });
+        if (paymentMethod === 'Wallet') {
+            setBalances({ wallet: balances.wallet + numAmount, goalSavings: balances.goalSavings - numAmount });
         } else {
-            setBalances({ googlePay: balances.googlePay + numAmount, goalSavings: balances.goalSavings - numAmount });
+            setBalances({ bankAccount: balances.bankAccount + numAmount, goalSavings: balances.goalSavings - numAmount });
         }
       }
       
@@ -143,8 +143,8 @@ export function GoalActionDialog({ open, onOpenChange, goalId, goalName, type, o
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Cash">Cash (Available: ₹{balances.cash})</SelectItem>
-                <SelectItem value="Google Pay">Google Pay (Available: ₹{balances.googlePay})</SelectItem>
+                <SelectItem value="Bank account">Bank account (Available: ₹{balances.bankAccount})</SelectItem>
+                <SelectItem value="Wallet">Wallet (Available: ₹{balances.wallet})</SelectItem>
               </SelectContent>
             </Select>
           </div>
