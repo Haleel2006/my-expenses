@@ -6,15 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "android:build": "npm run build && npx cap sync",
-    "android:open": "npx cap open android",
-    "android:sync": "npx cap sync"
+    "lint": "next lint"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
-    "@capacitor/android": "^8.3.3",
-    "@capacitor/core": "^8.3.3",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
@@ -47,7 +42,6 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.6.4",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^18",

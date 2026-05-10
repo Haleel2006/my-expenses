@@ -1,24 +1,34 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # dependencies
-**/node_modules
+/node_modules
+frontend/node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
-**/coverage
+/coverage
+frontend/coverage
 
 # next.js
-**/.next/
-**/out/
+/.next/
+frontend/.next/
+/out/
+frontend/out/
 
 # production
-**/build
-**/dist
+/build
+frontend/build
 
 # misc
-.DS_Store
+*.DS_Store
 *.pem
-*.log
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # local env files
 .env*.local
@@ -29,10 +39,3 @@
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Capacitor/Android
-frontend/android/app/build
-frontend/android/app/src/main/assets/public
-frontend/android/app/src/main/assets/capacitor.config.json
-frontend/android/captcha.config.json
-
